@@ -1,0 +1,47 @@
+Song file:
+	name
+	song lines (1+)
+	track lines (1+)
+	instrument lines (1+)
+	
+Song line:
+	se <l> <c> <t> <x>
+	l = [b] key: line of song
+	c = [b] key: channel
+	t = [b] val: track
+	x = [b] val: transpose
+
+Track line:
+	tl <t> <l> <n> <i>
+	t = [b] key: track
+	l = [b] key: line of track
+	n = [b] val: note
+	i = [b] val: instrument
+
+Instrument line:
+	il <i> <l> <c>
+	i = [b] key: instrument
+	l = [b] key: line of instrument
+	c = [w] val: instrument command
+
+Instrument command:
+	Bits: 0000cccc pppppppp
+	c = command
+	p = parameter
+	Commands:
+		0: Clear instrument (including frequency and note)
+		1: Set instrument = p
+		2: ILLEGAL
+		3: Set SLIDE = p (signed)
+		4: Set VRATE = p (unsigned)
+		5: Set VDEPTH = p (unsigned)
+		6: Set volume (amplitude of carrier) = p (unsigned)
+		7: Set FADE = p (signed)
+		8: Set amount of FM (amplitude of modulator) = p (unsigned)
+		9: Restart song (on next song update)
+		A: Set note = tracknote + p (signed)
+		B: Set FM multiplier = p (unsigned 6.2)
+		C: Set SWEEP = p (unsigned)
+		D: Delay; Set TIMER = p (unsigned)
+		E: ILLEGAL
+		F: ILLEGAL
