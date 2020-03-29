@@ -176,6 +176,7 @@ class TurbulencePlayer {
       if(channelMute[i]) continue;
       samp += getWave(i);
     }
+    //samp += samp>>1;
     if(enableFX) {
       samp <<= 4;
       // Reverb stereo spatialization
