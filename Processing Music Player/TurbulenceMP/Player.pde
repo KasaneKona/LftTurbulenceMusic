@@ -27,15 +27,17 @@ class TurbulencePlayer {
   int[] c_fm_multiplier = new int[8];
   int[] c_fm_volume = new int[8];
   int[] c_timer = new int[8];
-  int[] reverbBuffer = new int[256];
+  int[] reverbBuffer;
   int reverb_1 = 0;
   int reverb_2 = 0;
   int reverb_3 = 250;
   boolean enableFX = true;
+  boolean[] channelMute = new boolean[8];
   
-  public TurbulencePlayer(int sampleRate) {
-    freqTable = initFreqTable(sampleRate);
-    framesPerSample = 60f / sampleRate;
+  public TurbulencePlayer() {
+    freqTable = initFreqTable();
+    framesPerSample = 60f / SAMPLEFREQ;
+    reverbBuffer = new int[256];
   }
   public void play(Song s) {
     this.s = s;
@@ -171,10 +173,12 @@ class TurbulencePlayer {
     }
     int samp = 0;
     for(int i = 0; i < 8; i++) {
+      if(channelMute[i]) continue;
       samp += getWave(i);
     }
     if(enableFX) {
       samp <<= 4;
+      // Reverb stereo spatialization
       int right = reverbBuffer[reverb_1];
       int left = right;
       left &= 0xFFFF0000;
@@ -192,6 +196,7 @@ class TurbulencePlayer {
       reverb_1 = (reverb_1+1) & 255;
       reverb_2 = (reverb_2+1) & 255;
       reverb_3 = (reverb_3+1) & 255;
+      // Stereo widening
       int diff = right - left;
       right >>= 2;
       left >>= 2;
@@ -214,9 +219,8 @@ class TurbulencePlayer {
     c_phase[ch] += freq;
     int phase = c_phase[ch];
     int mulux = phase >>> 16;
-    //multiplier &= 0xFF;
     multiplier *= mulux;
-    multiplier >>>= 3+2;
+    multiplier >>>= 5;
     boolean c = (multiplier&0x0800) > 0;
     boolean z = (multiplier&0x1000) == 0;
     multiplier &= 0x07FF;

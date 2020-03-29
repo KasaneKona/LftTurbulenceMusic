@@ -1,6 +1,10 @@
 boolean enableHidden = false;
-boolean record = true;
+boolean record = false;
 boolean enableFX = true;
+int outputRate = 28000;
+int isolateChannel = -1;
+boolean warpSpeed = false;
+float finishDelay = 4;
 
 Song song;
 TurbulencePlayer player;
@@ -17,12 +21,22 @@ void setup() {
     exit();
     return;
   }
-  player = new TurbulencePlayer(SAMPLEFREQ);
+  player = new TurbulencePlayer();
   player.play(song);
+  if(isolateChannel >= 0) {
+    for(int i = 0; i < 8; i++) player.channelMute[i] = (isolateChannel != i);
+  }
   player.enableFX = enableFX;
   File recfile = null;
-  if(record) recfile = new File(sketchPath(enableHidden ? "turbulence_hidden" : "turbulence") + (enableFX ? "" : "_nofx") + ".wav");
-  nsp = new NativeSoundPlayer(player, SAMPLEFREQ, recfile, 1);
+  if(record) {
+    String recFn = "turbulence";
+    if(enableHidden) recFn += "_hidden";
+    if(!enableFX) recFn += "_nofx";
+    if(isolateChannel >= 0) recFn += "_ch"+isolateChannel;
+    recFn += ".wav";
+    recfile = new File(sketchPath(recFn));
+  }
+  nsp = new NativeSoundPlayer(player, outputRate, recfile, warpSpeed ? 4 : 1, finishDelay);
   nsp.debug = true;
   nsp.open();
 }
@@ -36,6 +50,7 @@ void draw() {
   for(int c = 0; c < 8; c++) {
     text(player.c_fm_volume[c], 0, 40 + c*16);
   }
+  if(nsp.finished) exit();
 }
 
 void exit() {
