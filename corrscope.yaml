@@ -8,7 +8,7 @@ render_ms: 30
 trigger_subsampling: 1
 render_subsampling: 1
 render_subfps: 2
-amplification: 4.5
+amplification: 3.0
 trigger_stereo: !Flatten SumAvg
 render_stereo: !Flatten SumAvg
 trigger: !CorrelationTriggerConfig
