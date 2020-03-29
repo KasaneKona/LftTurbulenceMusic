@@ -8,14 +8,16 @@ import java.io.ByteArrayOutputStream;
 
 public class NativeSoundPlayer extends Thread {
   boolean debug = false;
-  private TurbulencePlayer music;
   short[] currSamples;
   float sampleTimer;
   int outputRate;
+  int outputSpeedMultiplier;
+  private TurbulencePlayer music;
   float relativeSampleRate;
   private SourceDataLine line;
   private boolean finished=false;
   private byte[] internalBuffer;
+  private byte[] internalBufferMult;
   private int intBufSamples;
   private int extBufSamples;
   private AudioFormat format;
@@ -25,18 +27,20 @@ public class NativeSoundPlayer extends Thread {
   private boolean doRecord=false;
   float finishDelay;
   float finishCountdown;
-  public NativeSoundPlayer(TurbulencePlayer music, int outputRate, File recFile, float outSpeedMult, float finishDelay) {
-    this.outputRate = outputRate;
-    relativeSampleRate = (float)SAMPLEFREQ / outputRate;
+  public NativeSoundPlayer(TurbulencePlayer music, int outputRate, File recFile, int outSpeedMult, float finishDelay) {
     this.music = music;
+    this.outputRate = outputRate;
     this.finishDelay = finishDelay;
-    recordFile = recFile;
+    this.recordFile = recFile;
+    this.outputSpeedMultiplier = outSpeedMult;
+    relativeSampleRate = (float)SAMPLEFREQ / outputRate;
     if(recordFile != null) doRecord = true;
     extBufSamples = outputRate / 10; // 100ms/6frame buffer
     intBufSamples = outputRate / 20; // 50ms/3frame chunk size
     internalBuffer=new byte[intBufSamples * 2 * 2];
+    internalBufferMult=new byte[intBufSamples * 2 * 2];
     try {
-      format = new AudioFormat((float)outputRate * outSpeedMult, 8 * 2, 2, true, false);
+      format = new AudioFormat((float)outputRate, 8 * 2, 2, true, false);
       formatRecord = new AudioFormat((float)outputRate, 8 * 2, 2, true, false);
       line = (SourceDataLine) AudioSystem.getSourceDataLine(format);
       line.open(format, extBufSamples * 2 * 2);
@@ -72,11 +76,15 @@ public class NativeSoundPlayer extends Thread {
     if(debug) println("Audio output finished");
     finished = true;
   }
+  int multBufferCounter;
+  int multBufferOffset;
   public void run() {
     if(finished) return;
     finishCountdown = finishDelay;
     currSamples = new short[2];
     line.start();
+    multBufferOffset = 0;
+    int multBufferSize = internalBufferMult.length;
     while(!finished) {
       int offset = 0;
       // Generate sample buffer
@@ -88,19 +96,30 @@ public class NativeSoundPlayer extends Thread {
         internalBuffer[offset++] = (byte)(sampleL >> 8);
         internalBuffer[offset++] = (byte)(sampleR >> 0);
         internalBuffer[offset++] = (byte)(sampleR >> 8);
+        if(multBufferCounter == 0) {
+          internalBufferMult[multBufferOffset++] = (byte)(sampleL >> 0);
+          internalBufferMult[multBufferOffset++] = (byte)(sampleL >> 8);
+          internalBufferMult[multBufferOffset++] = (byte)(sampleR >> 0);
+          internalBufferMult[multBufferOffset++] = (byte)(sampleR >> 8);
+          if(multBufferOffset == multBufferSize) {
+            multBufferOffset = 0;
+            // Wait for space to become available
+            while(line.available() < intBufSamples) {
+              try {
+                Thread.sleep(1);
+              } catch(InterruptedException nom) {
+              }
+            }
+            line.write(internalBufferMult, 0, multBufferSize);
+          }
+        }
+        multBufferCounter++;
+        if(multBufferCounter >= outputSpeedMultiplier) multBufferCounter = 0;
       }
       // Copy internal buffer to record buffer
       if(doRecord) {
         recordBuffer.write(internalBuffer, 0, internalBuffer.length);
       }
-      // Wait for space to become available
-      while(line.available() < intBufSamples << 2) {
-        try {
-          Thread.sleep(1);
-        } catch(InterruptedException nom) {
-        }
-      }
-      line.write(internalBuffer, 0, internalBuffer.length);
       if(musicFinished()) {
         finishCountdown -= (float)intBufSamples / outputRate;
         if(finishCountdown <= 0) break;

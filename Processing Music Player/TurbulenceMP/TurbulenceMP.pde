@@ -36,7 +36,7 @@ void setup() {
     recFn += ".wav";
     recfile = new File(sketchPath(recFn));
   }
-  nsp = new NativeSoundPlayer(player, outputRate, recfile, warpSpeed ? 4 : 1, finishDelay);
+  nsp = new NativeSoundPlayer(player, outputRate, recfile, warpSpeed ? 8 : 1, finishDelay);
   nsp.debug = true;
   nsp.open();
 }
