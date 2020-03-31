@@ -213,8 +213,8 @@ class TurbulencePlayer {
       right += diff;
       left -= diff;
       // x1.5, /2^16 with rounding
-      left = (((left + left>>1) >> 15) + 1) >> 1;
-      right = (((right + right>>1) >> 15) + 1) >> 1;
+      left = (((left + (left>>1)) >> 15) + 1) >> 1;
+      right = (((right + (right>>1)) >> 15) + 1) >> 1;
       return new short[] {
         (short)(min(max(-32767,left),32767)),
         (short)(min(max(-32767,right),32767)),
