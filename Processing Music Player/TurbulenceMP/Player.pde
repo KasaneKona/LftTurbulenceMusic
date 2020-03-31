@@ -183,7 +183,6 @@ class TurbulencePlayer {
       if(channelMute[i]) continue;
       samp += getWave(i);
     }
-    samp += samp >> 1; // x1.5
     if(enableFX) {
       samp <<= 4;
       // Reverb stereo spatialization
@@ -213,7 +212,13 @@ class TurbulencePlayer {
       diff <<= 1;
       right += diff;
       left -= diff;
-      return new short[] {(short)(left>>16), (short)(right>>16)};
+      // x1.5, /2^16 with rounding
+      left = (((left + left>>1) >> 15) + 1) >> 1;
+      right = (((right + right>>1) >> 15) + 1) >> 1;
+      return new short[] {
+        (short)(min(max(-32767,left),32767)),
+        (short)(min(max(-32767,right),32767)),
+      };
     }
     samp >>= 12;
     return new short[] {(short)samp, (short)samp};
