@@ -33,10 +33,12 @@ class TurbulencePlayer {
   int reverb_3 = 250;
   boolean enableFX = true;
   boolean[] channelMute = new boolean[8];
+  int[] swingTable = {1}; // No swing by default
+  int swingCounter;
   
-  public TurbulencePlayer() {
+  public TurbulencePlayer(float fps) {
     freqTable = initFreqTable();
-    framesPerSample = 60f / SAMPLEFREQ;
+    framesPerSample = fps / SAMPLEFREQ;
     reverbBuffer = new int[256];
   }
   public void play(Song s) {
@@ -46,6 +48,7 @@ class TurbulencePlayer {
     currentTrackLine = TRACKLEN-1;
     songTimer = 0;
     finished = false;
+    swingCounter = 0;
   }
   void step() {
     if(finished) return;
@@ -98,11 +101,15 @@ class TurbulencePlayer {
     }
   }
   void frame() {
-    songTimer--;
-    if(songTimer <= 0) {
-      step();
-      songTimer = TEMPO;
+    for(int i = 0; i < swingTable[swingCounter]; i++) {
+      songTimer--;
+      if(songTimer <= 0) {
+        step();
+        songTimer = TEMPO;
+      }
     }
+    swingCounter++;
+    if(swingCounter >= swingTable.length) swingCounter = 0;
     for(int c = 0; c < 8; c++) {
       while(true) {
         if(c_instr[c] == 0) break;

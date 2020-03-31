@@ -5,6 +5,7 @@ int outputRate = 28000;
 int isolateChannel = -1;
 boolean warpSpeed = false;
 float finishDelay = 4;
+boolean swingHack = false;
 
 Song song;
 TurbulencePlayer player;
@@ -21,7 +22,10 @@ void setup() {
     exit();
     return;
   }
-  player = new TurbulencePlayer();
+  player = new TurbulencePlayer(swingHack ? 66 : 60);
+  if(swingHack)
+    // sum = count for proper play
+    player.swingTable = new int[]{1,0,1,0,1,0,1,0,2,1,2,1,2,1,2,1};
   player.play(song);
   if(isolateChannel >= 0) {
     for(int i = 0; i < 8; i++) player.channelMute[i] = (isolateChannel != i);
@@ -31,6 +35,7 @@ void setup() {
   if(record) {
     String recFn = "turbulence";
     if(enableHidden) recFn += "_hidden";
+    if(swingHack) recFn += "_swing";
     if(!enableFX) recFn += "_nofx";
     if(isolateChannel >= 0) recFn += "_ch"+isolateChannel;
     recFn += ".wav";
