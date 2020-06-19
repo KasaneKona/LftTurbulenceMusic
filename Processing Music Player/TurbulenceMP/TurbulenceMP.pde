@@ -22,7 +22,7 @@ void setup() {
     exit();
     return;
   }
-  player = new TurbulencePlayer(swingHack ? 66 : 60);
+  player = new TurbulencePlayer(swingHack ? 63 : 60);
   if(swingHack)
     // sum = count for proper play
     player.swingTable = new int[]{1,0,1,0,1,0,1,0,2,1,2,1,2,1,2,1};

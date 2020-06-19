@@ -8,6 +8,7 @@ class TurbulencePlayer {
   int songTimer;
   boolean finished;
   int[] freqTable;
+  int[] sinTable;
   int[] c_track = new int[8];
   int[] c_transp = new int[8];
   int[] c_tnote = new int[8];
@@ -38,6 +39,7 @@ class TurbulencePlayer {
   
   public TurbulencePlayer(float fps) {
     freqTable = initFreqTable();
+    sinTable = initSinTable();
     framesPerSample = fps / SAMPLEFREQ;
     reverbBuffer = new int[256];
   }
@@ -136,7 +138,7 @@ class TurbulencePlayer {
       vrate += vpos;
       c_vpos[c] = vrate;
       vpos <<= 5;
-      int mulux = isin(vpos);
+      int mulux = sinTable[vpos&8191];
       boolean z = mulux>=0;
       mulux = abs(mulux);
       // need renames
@@ -238,7 +240,7 @@ class TurbulencePlayer {
     boolean z = (multiplier&0x1000) == 0;
     multiplier &= 0x07FF;
     if(c) multiplier ^= 0x07FF;
-    int sinmult = isin(multiplier);
+    int sinmult = sinTable[multiplier];
     int mod = amount * sinmult;
     mod <<= 10;
     if(!z) mod = -mod;
@@ -249,14 +251,10 @@ class TurbulencePlayer {
     z = (mod&0x1000) == 0;
     mod &= 0x07FF;
     if(c) mod ^= 0x7FF;
-    int sinmod = isin(mod);
+    int sinmod = sinTable[mod];
     sinmod *= volume & 255;
     if(!z) sinmod = -sinmod;
     return sinmod;
-  }
-  int isin(int a) {
-    // TODO REPLACE WITH TABLE
-    return round(65535 * sin(a * TWO_PI / 8192));
   }
   void executeCommand(int ch, int cmd, int param) {
     switch(cmd) {

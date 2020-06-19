@@ -23,3 +23,9 @@ int[] initFreqTable() {
   }
   return table;
 }
+int[] initSinTable() {
+  int[] table = new int[8192];
+  for(int i = 0; i < 8192; i++)
+    table[i] = round(65535 * sin(i * TWO_PI / 8192));
+  return table;
+}
