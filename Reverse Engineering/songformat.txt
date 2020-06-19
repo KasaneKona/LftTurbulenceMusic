@@ -41,7 +41,7 @@ Instrument command:
 		9: Restart song (on next song update)
 		A: Set note = tracknote + p (signed)
 		B: Set FM multiplier = p (unsigned 6.2)
-		C: Set SWEEP = p (unsigned)
+		C: Set SWEEP = p (signed)
 		D: Delay; Set TIMER = p (unsigned)
 		E: ILLEGAL
 		F: ILLEGAL
